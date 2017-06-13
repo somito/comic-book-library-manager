@@ -8,62 +8,42 @@ using System.Threading.Tasks;
 
 namespace ComicBookShared.Data
 {
-    public class ComicBooksRepository
+    public class ComicBooksRepository : BaseRepository<ComicBook>
     {
-        private Context _context = null;
-
         public ComicBooksRepository(Context context)
+            : base(context)
         {
-            _context = context;
         }
 
-        public IList<ComicBook> GetList()
+        public override IList<ComicBook> GetList()
         {
-            return _context.ComicBooks
+            return Context.ComicBooks
                     .Include(cb => cb.Series)
                     .OrderBy(cb => cb.Series.Title)
                     .ThenBy(cb => cb.IssueNumber)
                     .ToList();
         }
 
-        public ComicBook Get(int? id, bool includeRelatedEntities)
+        public override ComicBook Get(int? id, bool includeRelatedEntities = true)
         {
+            var comicBooks = Context.ComicBooks.AsQueryable();
+
             if (includeRelatedEntities)
-            { 
-                return _context.ComicBooks
+            {
+                comicBooks = comicBooks
                         .Include(cb => cb.Series)
                         .Include(cb => cb.Artists.Select(a => a.Artist))
-                        .Include(cb => cb.Artists.Select(a => a.Role))
-                        .Where(cb => cb.Id == id)
-                        .SingleOrDefault();
+                        .Include(cb => cb.Artists.Select(a => a.Role));
             }
 
-            return _context.ComicBooks
+            return comicBooks
                 .Where(cb => cb.Id == id)
                 .SingleOrDefault();
         }
 
-        public void Add(ComicBook comicBook)
-        {
-            _context.ComicBooks.Add(comicBook);
-            _context.SaveChanges();
-        }
-
-        public void Update(ComicBook comicBook)
-        {
-            _context.Entry(comicBook).State = EntityState.Modified;
-            _context.SaveChanges();
-        }
-
-        public void Delete(ComicBook comicBook)
-        {
-            _context.Entry(comicBook).State = EntityState.Deleted;
-            _context.SaveChanges();
-        }
-
         public bool Validate(ComicBook comicBook)
         {
-            return _context.ComicBooks.Any(cb => cb.Id != comicBook.Id &&
+            return Context.ComicBooks.Any(cb => cb.Id != comicBook.Id &&
                                                   cb.SeriesId == comicBook.SeriesId &&
                                                   cb.IssueNumber == comicBook.IssueNumber);
         }

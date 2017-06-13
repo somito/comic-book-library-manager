@@ -74,7 +74,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             return View(viewModel);
         }
 
-        public ActionResult Delete(int comicBookId, int? id)
+        public ActionResult Delete(int? id)
         {
             if (id == null)
             {
@@ -94,10 +94,9 @@ namespace ComicBookLibraryManagerWebApp.Controllers
         }
 
         [HttpPost]
-        public ActionResult Delete(int comicBookId, int id)
+        public ActionResult Delete(int id, int comicBookId)
         {
-            var comicBookArtist = new ComicBookArtist() { Id = id };
-            _comicBookArtistsRepository.Delete(comicBookArtist);
+            _comicBookArtistsRepository.Delete(id);
 
             TempData["Message"] = "Your artist was successfully deleted!";
 

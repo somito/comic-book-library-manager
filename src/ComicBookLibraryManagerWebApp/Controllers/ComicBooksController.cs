@@ -151,8 +151,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
         [HttpPost]
         public ActionResult Delete(int id)
         {
-            var comicBook = new ComicBook() { Id = id };
-            _comicBooksRepository.Delete(comicBook);
+            _comicBooksRepository.Delete(id);
 
             TempData["Message"] = "Your comic book was successfully deleted!";
 
