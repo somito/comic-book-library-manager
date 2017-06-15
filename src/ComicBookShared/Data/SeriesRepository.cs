@@ -15,13 +15,6 @@ namespace ComicBookShared.Data
         {
         }
 
-        public override IList<Series> GetList()
-        {
-            return Context.Series
-                    .OrderBy(s => s.Title)
-                    .ToList();
-        }
-
         public override Series Get(int? id, bool includeRelatedEntities = true)
         {
             var series = Context.Series.AsQueryable();
@@ -30,12 +23,19 @@ namespace ComicBookShared.Data
             {
                 series = series.Include(s => s.ComicBooks);
             }
-            
+
             return series
                 .Where(s => s.Id == id)
                 .SingleOrDefault();
         }
 
+        public override IList<Series> GetList()
+        {
+            return Context.Series
+                    .OrderBy(s => s.Title)
+                    .ToList();
+        }
+        
         public bool Validate(Series series)
         {
             return Context.Series.Any(s => s.Id != series.Id &&
