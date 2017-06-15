@@ -119,11 +119,21 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             {
                 var comicBook = viewModel.ComicBook;
 
-                _comicBooksRepository.Update(comicBook);
+                try
+                {
+                    _comicBooksRepository.Update(comicBook);
 
-                TempData["Message"] = "Your comic book was successfully updated!";
+                    TempData["Message"] = "Your comic book was successfully updated!";
 
-                return RedirectToAction("Detail", new { id = comicBook.Id });
+                    return RedirectToAction("Detail", new { id = comicBook.Id });
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    ModelState.AddModelError(
+                        string.Empty, 
+                        "The comic book being updated has already been updated by another user.");
+                }
+                
             }
 
             viewModel.Init(Repository);
