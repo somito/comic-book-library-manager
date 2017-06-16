@@ -170,17 +170,50 @@ namespace ComicBookLibraryManagerWebApp.Controllers
                 return HttpNotFound();
             }
 
-            return View(comicBook);
+            var viewModel = new ComicBooksDeleteViewModel()
+            {
+                ComicBook = comicBook
+            };
+
+            return View(viewModel);
         }
 
         [HttpPost]
-        public ActionResult Delete(int id)
+        public ActionResult Delete(ComicBooksDeleteViewModel viewModel)
         {
-            _comicBooksRepository.Delete(id);
+            try
+            {
+                _comicBooksRepository.Delete(viewModel.ComicBook.Id, viewModel.ComicBook.RowVersion);
 
-            TempData["Message"] = "Your comic book was successfully deleted!";
+                TempData["Message"] = "Your comic book was successfully deleted!";
 
-            return RedirectToAction("Index");
+                return RedirectToAction("Index");
+
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                string message = null;
+
+                var entityProperyValues = ex.Entries.Single().GetDatabaseValues();
+
+                if (entityProperyValues == null)
+                {
+                    message = "The comic book being deleted has been deleted by another user. Click the 'Cancel' button to return to the list page.";
+
+                    viewModel.ComicBookHasBeenDeleted = true;
+                }
+                else
+                {
+                    message = "The comic book being deleted has already been updated by another user. If you still want to delete the comic book then click the 'Delete' button again. Otherwise, click the 'Cancel' button to return to the Detail page.";
+
+                    viewModel.ComicBook.RowVersion = ((ComicBook)entityProperyValues.ToObject()).RowVersion;
+                }
+
+                ModelState.AddModelError(string.Empty, message);
+
+                return View(viewModel);
+            }
+            
         }
 
         /// <summary>
