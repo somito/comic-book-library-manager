@@ -118,7 +118,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             if (ModelState.IsValid)
             {
                 var comicBook = viewModel.ComicBook;
-
+                
                 try
                 {
                     _comicBooksRepository.Update(comicBook);
@@ -127,11 +127,26 @@ namespace ComicBookLibraryManagerWebApp.Controllers
 
                     return RedirectToAction("Detail", new { id = comicBook.Id });
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
-                    ModelState.AddModelError(
-                        string.Empty, 
-                        "The comic book being updated has already been updated by another user.");
+                    string message = null;
+
+                    var entityProperyValues = ex.Entries.Single().GetDatabaseValues();
+
+                    if (entityProperyValues == null)
+                    {
+                        message = "The comic book being updated has been deleted by another user. Click the 'Cancel' button to return to the list page.";
+
+                        viewModel.ComicBookHasBeenDeleted = true;
+                    }
+                    else
+                    {
+                        message = "The comic book being updated has already been updated by another user. If you still want to make your changes then click the 'Save' button again. Otherwise, click the 'Cancel' button to discard your changes.";
+
+                        comicBook.RowVersion = ((ComicBook)entityProperyValues.ToObject()).RowVersion; 
+                    }
+
+                    ModelState.AddModelError(string.Empty, message);
                 }
                 
             }
